@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const app = express();
 const port = 3000;
+const models = require('./models');
 
 // json 형식의 데이터를 처리할 수 있게 설정
 app.use(express.json());
@@ -12,67 +13,35 @@ app.use(cors());
 // app.메소드(url, 함수)
 
 app.get('/products', async(req,res)=>{
-    const result = {
-        products: [
-            {
-                id: 1,
-                name: "거실조명",
-                price: 50000,
-                imgsrc: "images/products/product1.jpg",
-                seller: "green",
-            },
-            {
-                id: 2,
-                name: "아동조명",
-                price: 50000,
-                imgsrc: "images/products/product1.jpg",
-                seller: "green",
-            },
-            {
-                id: 3,
-                name: "아동조명",
-                price: 50000,
-                imgsrc: "images/products/product1.jpg",
-                seller: "green",
-            },
-            {
-                id: 4,
-                name: "아동조명",
-                price: 50000,
-                imgsrc: "images/products/product1.jpg",
-                seller: "green",
-            },
-            {
-                id: 5,
-                name: "아동조명",
-                price: 50000,
-                imgsrc: "images/products/product1.jpg",
-                seller: "green",
-            },
-            {
-                id: 6,
-                name: "아동조명",
-                price: 50000,
-                imgsrc: "images/products/product1.jpg",
-                seller: "green",
-            },
-            {
-                id: 7,
-                name: "아동조명",
-                price: 50000,
-                imgsrc: "images/products/product1.jpg",
-                seller: "green",
-            },
-            {
-                id: 8,
-                name: "아동조명",
-                price: 50000,
-                imgsrc: "images/products/product1.jpg",
-                seller: "green",
-            },
-        ]
-    }
-    res.send(result);
+    // 데이터 베이스 조회하기
+    models.Product.findAll()
+    .then(result=>{
+        console.log("제품전체조회", result);
+        res.send(result);
+    })
+    .catch(e=>{
+        console.error(e);
+        res.send("파일 조회에 문제가 있습니다.");
+    })
+});
+// method get이고 url은 /product/2로 요청이 온 경우 
+app.get('/product/:id', async (req,res)=>{
+    const params = req.params;
+    // const { id } = params;
+    // 하나만 조회할 때는 findOne -> select문
+    models.Product.findOne({
+        // 조건절
+        where: {
+            id: params.id,
+        }
+    })
+    .then(result=>{
+        res.send(result);
+    })
+    .catch(e=>{
+        console.error(e);
+        res.send("상품 조회에 문제가 생겼습니다.");
+    })
 });
 app.post('/green',async (req,res)=>{
     console.log(req);
@@ -81,4 +50,17 @@ app.post('/green',async (req,res)=>{
 // 실행
 app.listen(port, ()=>{
     console.log('쇼핑몰 서버가 동작중입니다.');
+    // sequelize와 데이터베이스 연결 작업
+    // 데이터베이스 동기화
+    models.sequelize
+    .sync()
+    .then(()=>{
+        console.log('DB연결 성공');
+    })
+    .catch(()=>{
+        console.error(e);
+        console.log('DB연결 에러');
+        // 서버실행이 안되면 프로세스를 종료
+        process.exit();
+    })
 });
